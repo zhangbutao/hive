@@ -41,13 +41,13 @@ public class CreateCatalogAnalyzer extends BaseSemanticAnalyzer {
   @Override
   public void analyzeInternal(ASTNode root) throws SemanticException {
     String catalogName = unescapeIdentifier(root.getChild(0).getText());
-    String locationUrl = unescapeSQLString(root.getChild(1).getChild(0).getText());
-    outputs.add(toWriteEntity(locationUrl));
 
     boolean ifNotExists = false;
     String comment = null;
+    String locationUri = null;
+    String managedLocationUri = null;
 
-    for (int i = 2; i < root.getChildCount(); i++) {
+    for (int i = 1; i < root.getChildCount(); i++) {
       ASTNode childNode = (ASTNode) root.getChild(i);
       switch (childNode.getToken().getType()) {
         case HiveParser.TOK_IFNOTEXISTS:
@@ -56,13 +56,17 @@ public class CreateCatalogAnalyzer extends BaseSemanticAnalyzer {
         case HiveParser.TOK_CATALOGCOMMENT:
           comment = unescapeSQLString(childNode.getChild(0).getText());
           break;
+        case HiveParser.TOK_CATALOGLOCATION:
+          locationUri = unescapeSQLString(childNode.getChild(0).getText());
+          outputs.add(toWriteEntity(locationUri));
+          break;
         default:
           throw new SemanticException("Unrecognized token in CREATE CATALOG statement");
       }
     }
 
-    CreateCatalogDesc desc = new CreateCatalogDesc(catalogName, comment, locationUrl, ifNotExists);
-    Catalog catalog = new Catalog(catalogName, locationUrl);
+    CreateCatalogDesc desc = new CreateCatalogDesc(catalogName, comment, locationUri, ifNotExists);
+    Catalog catalog = new Catalog(catalogName, locationUri);
 
     rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(), desc)));
     outputs.add(new WriteEntity(catalog, WriteEntity.WriteType.DDL_NO_LOCK));

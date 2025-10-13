@@ -1125,9 +1125,9 @@ createCatalogStatement
     : KW_CREATE KW_CATALOG
         ifNotExists?
         name=identifier
-        catLocation
+        catLocation?
         catalogComment?
-    -> ^(TOK_CREATECATALOG $name catLocation ifNotExists? catalogComment?)
+    -> ^(TOK_CREATECATALOG $name catLocation? ifNotExists? catalogComment?)
     ;
 
 catLocation
